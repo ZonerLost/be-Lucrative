@@ -15,18 +15,17 @@ double _clamp(double v, double min, double max) {
 }
 
 class HomeTabView extends StatelessWidget {
-   HomeTabView({super.key});
-  final controller = Get.put(HomeShellController());
+  HomeTabView({super.key});
+
+  final HomeShellController controller = Get.find<HomeShellController>();
+
   @override
   Widget build(BuildContext context) {
     final w = context.screenWidth;
 
-    // ✅ responsive paddings/gaps (UI same, just scalable)
     final hPad = _clamp(w * 0.045, 14, 20);
     final topPad = _clamp(w * 0.03, 10, 16);
     final gap = _clamp(w * 0.03, 10, 16);
-
-    // ✅ small screens (Infinix) -> slightly taller cards to avoid overflow
     final gridRatio = w < 360 ? 1.15 : (w < 420 ? 1.25 : 1.35);
 
     return SafeArea(
@@ -55,8 +54,7 @@ class HomeTabView extends StatelessWidget {
                   stageText: "Stage 1/3",
                   xpToEvolve: "150 XP until evolution",
                   onSavedTap: () {
-                    // ✅ click pe controller update
-                    controller.triggerSavePopup(xp: 15, streak: 17);
+                    controller.openSavePopup(xp: 15, streak: 17);
                   },
                 ),
                 SizedBox(height: gap),
@@ -82,18 +80,27 @@ class HomeTabView extends StatelessWidget {
             ),
           ),
 
-          // ✅ POPUP OVERLAY
+          // ✅ POPUP OVERLAY (EnterAmount -> Success)
           Obx(() {
             if (!controller.showSavePopup.value) return const SizedBox.shrink();
 
-            return GestureDetector(
-              onTap: controller.closePopup,
-              child: Container(
-                color: Colors.black.withOpacity(0.45),
-                alignment: Alignment.center,
-                child: _SaveSuccessDialog(
-                  xp: controller.earnedXp.value,
-                  streak: controller.streakDays.value,
+            return Positioned.fill(
+              child: GestureDetector(
+                onTap: controller.closePopup,
+                child: Container(
+                  color: Colors.black.withOpacity(0.45),
+                  alignment: Alignment.center,
+                  child: GestureDetector(
+                    onTap: () {}, // ✅ prevent closing when tapping dialog
+                    child: Obx(() {
+                      return controller.popupStep.value == SavePopupStep.enterAmount
+                          ? _SaveEnterAmountDialog(controller: controller)
+                          : _SaveSuccessDialog(
+                        xp: controller.earnedXp.value,
+                        streak: controller.streakDays.value,
+                      );
+                    }),
+                  ),
                 ),
               ),
             );
@@ -103,7 +110,6 @@ class HomeTabView extends StatelessWidget {
     );
   }
 }
-
 class _Header extends StatelessWidget {
   final String name;
   final int streak;
@@ -314,7 +320,6 @@ class _BuddyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final w = context.screenWidth;
 
-    // ✅ responsive mascot sizing (UI same)
     final box = _clamp(w * 0.30, 105, 128);
     final mascot = _clamp(w * 0.22, 74, 92);
     final btnH = _clamp(w * 0.13, 48, 56);
@@ -342,7 +347,6 @@ class _BuddyCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-
           Container(
             width: box,
             height: box,
@@ -358,9 +362,7 @@ class _BuddyCard extends StatelessWidget {
               ),
             ),
           ),
-
           const SizedBox(height: 14),
-
           Text(
             xpToEvolve,
             style: AppTextStyles.body14Regular.copyWith(
@@ -369,9 +371,7 @@ class _BuddyCard extends StatelessWidget {
               color: Colors.black.withOpacity(0.55),
             ),
           ),
-
           const SizedBox(height: 18),
-
           SizedBox(
             width: double.infinity,
             height: btnH,
@@ -391,8 +391,7 @@ class _BuddyCard extends StatelessWidget {
                     AppAssets.sparkle,
                     width: 20,
                     height: 20,
-                    colorFilter:
-                    const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                    colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -411,7 +410,94 @@ class _BuddyCard extends StatelessWidget {
     );
   }
 }
+class _SaveEnterAmountDialog extends StatelessWidget {
+  final HomeShellController controller;
 
+  const _SaveEnterAmountDialog({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final w = context.screenWidth;
+    final cardW = _clamp(w * 0.78, 255, 320);
+
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        width: cardW,
+        padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(26),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.18),
+              blurRadius: 40,
+              offset: const Offset(0, 22),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              AppAssets.luca, // ✅ or your emoji asset
+              width: 58,
+              height: 58,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "How much you saved today?",
+              style: AppTextStyles.body14Regular.copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Colors.black.withOpacity(0.9),
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            TextField(
+              controller: controller.amountCtrl,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                hintText: "\$  Enter Amount",
+                filled: true,
+                fillColor: const Color(0xFFF4F1EC),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              ),
+            ),
+
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: controller.submitSave,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.purple,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Text(
+                  "Submit",
+                  style: AppTextStyles.button16SemiBold.copyWith(
+                    color: Colors.white,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 class _MetricCard extends StatelessWidget {
   final String iconPath;
   final String title;

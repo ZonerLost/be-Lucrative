@@ -59,12 +59,15 @@ class HistoryController extends GetxController {
 
     entries.assignAll(List.generate(12, (i) {
       final d = base.add(Duration(days: i));
+      final amount = (i % 2 == 0) ? 5 : 15;
+
       return HistoryEntryModel(
         date: d,
         xp: 15,
         day: 15,
         note: 'Saved from lunch money!',
         isStreak: true,
+        amountLabel: '\$5',
       );
     }));
 

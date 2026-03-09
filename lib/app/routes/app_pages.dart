@@ -85,11 +85,11 @@ class AppPages {
       page: () =>  SavingFrequencyView(),
       binding: SavingFrequencyBinding(),
     ),
-    GetPage(
-      name: AppRoutes.notifications,
-      page: () =>  NotificationsView(),
-      binding: NotificationsBinding(),
-    ),
+    // GetPage(
+    //   name: AppRoutes.notifications,
+    //   page: () =>  NotificationsView(),
+    //   binding: NotificationsBinding(),
+    // ),
     GetPage(
       name: AppRoutes.privacySecurity,
       page: () =>  PrivacySecurityView(),

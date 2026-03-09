@@ -13,6 +13,8 @@ class ProgressController extends GetxController {
   final Rx<WeeklyXpModel> weeklyXp =
       const WeeklyXpModel(values: [0, 0, 0, 0, 0, 0, 0], thisWeekXp: 0).obs;
 
+  final RxInt totalSavedThisWeek = 120.obs; // example
+  final RxInt savingsStreakDays = 6.obs;    // example (6/7)
   final RxList<MilestoneModel> milestones = <MilestoneModel>[].obs;
 
   @override

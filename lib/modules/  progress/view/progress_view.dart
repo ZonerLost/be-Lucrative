@@ -63,18 +63,19 @@ class ProgressView extends GetView<ProgressController> {
 
             SizedBox(height: gap),
 
-            // Weekly XP
+            // ✅ NEW: Total Saved This Week (ADD THIS BLOCK)
             const ProgressSectionTitle(
-              iconSvg: AppAssets.TrendUp_purple,
-              title: "This Week's XP",
+              iconSvg: AppAssets.glowingStar, // you can change icon if you have $
+              title: "Total Saved This Week",
             ),
 
             SizedBox(height: w * 0.03),
 
             ProgressSoftCard(
               padding: EdgeInsets.all(w * 0.04),
-              child: Obx(() => WeeklyXpChart(
-                data: controller.weeklyXp.value,
+              child: Obx(() => TotalSavedThisWeekCard(
+                amount: controller.totalSavedThisWeek.value,
+                days: controller.savingsStreakDays.value,
               )),
             ),
 

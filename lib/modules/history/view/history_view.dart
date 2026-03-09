@@ -10,6 +10,7 @@ class HistoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ put only once here
     final controller = Get.put(HistoryController());
 
     return Scaffold(

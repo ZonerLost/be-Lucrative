@@ -8,7 +8,7 @@ class HistoryCalendarView extends StatefulWidget {
 }
 
 class _HistoryCalendarViewState extends State<HistoryCalendarView> {
-  // ---------- Config (replace with your AppColors if needed)
+
   static const bg = Color(0xFFF7F4F0);
   static const cardBorder = Color(0xFFE7E2DC);
   static const purple = Color(0xFF6D5EF6);
@@ -18,6 +18,7 @@ class _HistoryCalendarViewState extends State<HistoryCalendarView> {
   static const _months = [
     'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'
   ];
+
   static const _week = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 
   int month = 9;
@@ -26,8 +27,6 @@ class _HistoryCalendarViewState extends State<HistoryCalendarView> {
   DateTime? rangeStart;
   DateTime? rangeEnd;
 
-  /// ✅ Dynamic data (demo): saved days (you can replace with controller data)
-  /// Example: if you have history entries dates, convert them to DateTime list.
   late Set<DateTime> savedDays;
 
   @override
@@ -50,9 +49,9 @@ class _HistoryCalendarViewState extends State<HistoryCalendarView> {
 
   DateTime _firstOfMonth() => DateTime(year, month, 1);
   DateTime _lastOfMonth() => DateTime(year, month + 1, 0);
+
   int _daysInMonth() => _lastOfMonth().day;
 
-  // Sunday=0..Saturday=6
   int _firstWeekdayOffset() => _firstOfMonth().weekday % 7;
 
   bool _sameDay(DateTime a, DateTime b) =>
@@ -60,20 +59,17 @@ class _HistoryCalendarViewState extends State<HistoryCalendarView> {
 
   DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
-  bool _isInSelectedRange(DateTime d) {
-    if (rangeStart == null || rangeEnd == null) return false;
-    final s = _dateOnly(rangeStart!);
-    final e = _dateOnly(rangeEnd!);
-    final x = _dateOnly(d);
-    return !x.isBefore(s) && !x.isAfter(e);
-  }
-
-  bool _isStart(DateTime d) => rangeStart != null && _sameDay(d, rangeStart!);
-  bool _isEnd(DateTime d) => rangeEnd != null && _sameDay(d, rangeEnd!);
-
   bool _isSaved(DateTime d) {
     final x = _dateOnly(d);
     return savedDays.any((e) => _sameDay(e, x));
+  }
+
+  int _savesThisMonth() {
+    return savedDays.where((d) => d.year == year && d.month == month).length;
+  }
+
+  int _totalAmountThisMonth() {
+    return _savesThisMonth() * 15;
   }
 
   void _onTapDay(DateTime d) {
@@ -84,7 +80,6 @@ class _HistoryCalendarViewState extends State<HistoryCalendarView> {
         return;
       }
 
-      // start exists, end null
       if (d.isBefore(rangeStart!)) {
         rangeEnd = rangeStart;
         rangeStart = d;
@@ -98,9 +93,9 @@ class _HistoryCalendarViewState extends State<HistoryCalendarView> {
     setState(() {
       if (month == 1) {
         month = 12;
-        year -= 1;
+        year--;
       } else {
-        month -= 1;
+        month--;
       }
       rangeStart = null;
       rangeEnd = null;
@@ -111,28 +106,25 @@ class _HistoryCalendarViewState extends State<HistoryCalendarView> {
     setState(() {
       if (month == 12) {
         month = 1;
-        year += 1;
+        year++;
       } else {
-        month += 1;
+        month++;
       }
       rangeStart = null;
       rangeEnd = null;
     });
   }
 
-  int _savesThisMonth() {
-    // ✅ dynamic: count savedDays in this month
-    return savedDays.where((d) => d.year == year && d.month == month).length;
-  }
-
   @override
   Widget build(BuildContext context) {
+
     final daysInMonth = _daysInMonth();
     final offset = _firstWeekdayOffset();
     final totalCells = offset + daysInMonth;
     final rows = (totalCells / 7).ceil();
 
     final saves = _savesThisMonth();
+    final amount = _totalAmountThisMonth();
 
     return Scaffold(
       backgroundColor: bg,
@@ -140,54 +132,31 @@ class _HistoryCalendarViewState extends State<HistoryCalendarView> {
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
         child: Column(
           children: [
-            // ✅ Calendar Card
+
+            /// Calendar Card
             Container(
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: cardBorder),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 18,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
               ),
               child: Column(
                 children: [
-                  // Header row
+
                   Row(
                     children: [
                       _HeaderIconBtn(icon: Icons.chevron_left_rounded, onTap: _prevMonth),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _DropdownPill<int>(
-                              value: month,
-                              items: List.generate(12, (i) => i + 1),
-                              label: (m) => _months[m - 1],
-                              onChanged: (v) => setState(() {
-                                month = v;
-                                rangeStart = null;
-                                rangeEnd = null;
-                              }),
+                        child: Center(
+                          child: Text(
+                            "${_months[month - 1]} $year",
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
                             ),
-                            const SizedBox(width: 10),
-                            _DropdownPill<int>(
-                              value: year,
-                              items: List.generate(9, (i) => DateTime.now().year - 4 + i),
-                              label: (y) => y.toString(),
-                              onChanged: (v) => setState(() {
-                                year = v;
-                                rangeStart = null;
-                                rangeEnd = null;
-                              }),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -195,9 +164,8 @@ class _HistoryCalendarViewState extends State<HistoryCalendarView> {
                     ],
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
 
-                  // Week labels
                   Row(
                     children: List.generate(7, (i) {
                       return Expanded(
@@ -206,7 +174,6 @@ class _HistoryCalendarViewState extends State<HistoryCalendarView> {
                             _week[i],
                             style: const TextStyle(
                               fontSize: 12,
-                              fontWeight: FontWeight.w500,
                               color: subText,
                             ),
                           ),
@@ -217,141 +184,76 @@ class _HistoryCalendarViewState extends State<HistoryCalendarView> {
 
                   const SizedBox(height: 8),
 
-                  // Days grid (more similar to screenshot)
                   Column(
                     children: List.generate(rows, (r) {
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Row(
-                          children: List.generate(7, (c) {
-                            final cellIndex = r * 7 + c;
-                            final dayNum = cellIndex - offset + 1;
+                      return Row(
+                        children: List.generate(7, (c) {
 
-                            if (dayNum < 1 || dayNum > daysInMonth) {
-                              return const Expanded(child: SizedBox(height: 38));
-                            }
+                          final cellIndex = r * 7 + c;
+                          final dayNum = cellIndex - offset + 1;
 
-                            final date = DateTime(year, month, dayNum);
+                          if (dayNum < 1 || dayNum > daysInMonth) {
+                            return const Expanded(child: SizedBox(height: 40));
+                          }
 
-                            final selected = _isInSelectedRange(date) || _isStart(date) || _isEnd(date);
-                            final isStart = _isStart(date);
-                            final isEnd = _isEnd(date);
+                          final date = DateTime(year, month, dayNum);
+                          final saved = _isSaved(date);
 
-                            // ✅ connected bar style (screenshot like)
-                            BorderRadius br;
-                            if (rangeStart != null && rangeEnd != null) {
-                              if (isStart && isEnd) {
-                                br = BorderRadius.circular(10);
-                              } else if (isStart) {
-                                br = const BorderRadius.horizontal(
-                                  left: Radius.circular(10),
-                                  right: Radius.circular(3),
-                                );
-                              } else if (isEnd) {
-                                br = const BorderRadius.horizontal(
-                                  left: Radius.circular(3),
-                                  right: Radius.circular(10),
-                                );
-                              } else if (selected) {
-                                br = BorderRadius.circular(3);
-                              } else {
-                                br = BorderRadius.circular(10);
-                              }
-                            } else {
-                              br = BorderRadius.circular(10);
-                            }
+                          return Expanded(
+                            child: GestureDetector(
+                              onTap: () => _onTapDay(date),
+                              child: SizedBox(
+                                height: 40,
+                                child: Center(
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
 
-                            final bool saved = _isSaved(date);
-
-                            return Expanded(
-                              child: GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTap: () => _onTapDay(date),
-                                child: SizedBox(
-                                  height: 38,
-                                  child: Center(
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        AnimatedContainer(
-                                          duration: const Duration(milliseconds: 160),
-                                          curve: Curves.easeOutCubic,
-                                          width: 38,
-                                          height: 32,
+                                      if (saved)
+                                        Container(
+                                          width: 34,
+                                          height: 30,
                                           decoration: BoxDecoration(
-                                            color: selected ? purple : Colors.transparent,
-                                            borderRadius: br,
+                                            color: purple,
+                                            borderRadius: BorderRadius.circular(8),
                                           ),
                                         ),
 
-                                        // ✅ day number
-                                        Text(
-                                          '$dayNum',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                            color: selected ? Colors.white : text,
-                                          ),
+                                      Text(
+                                        '$dayNum',
+                                        style: TextStyle(
+                                          color: saved ? Colors.white : text,
+                                          fontWeight: FontWeight.w600,
                                         ),
-
-                                        // ✅ tiny saved dot (optional, nice dynamic)
-                                        if (!selected && saved)
-                                          Positioned(
-                                            bottom: 3,
-                                            child: Container(
-                                              width: 4,
-                                              height: 4,
-                                              decoration: BoxDecoration(
-                                                color: purple.withOpacity(0.9),
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                            );
-                          }),
-                        ),
+                            ),
+                          );
+
+                        }),
                       );
                     }),
                   ),
 
-                  const SizedBox(height: 16),
-
-                  // Legend (match screenshot)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      _LegendItem(filled: true, label: 'Timeline'),
-                      SizedBox(width: 22),
-                      _LegendItem(filled: false, label: 'Timeline'),
-                    ],
-                  ),
                 ],
               ),
             ),
 
             const SizedBox(height: 14),
 
-            // ✅ Saves card (dynamic)
+            /// SAVES CARD
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 18,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
               ),
               child: Row(
                 children: [
+
                   Container(
                     width: 40,
                     height: 40,
@@ -359,42 +261,62 @@ class _HistoryCalendarViewState extends State<HistoryCalendarView> {
                       color: purple.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.star_rounded, color: purple, size: 22),
+                    child: const Icon(Icons.star_rounded, color: purple),
                   ),
+
                   const SizedBox(width: 12),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "$saves saves",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const Text(
+                          "this month",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: subText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '$saves saves',
+                        "\$$amount",
                         style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: text,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
                         ),
                       ),
-                      const SizedBox(height: 2),
                       const Text(
-                        'this month',
+                        "Amount",
                         style: TextStyle(
                           fontSize: 12,
-                          fontWeight: FontWeight.w500,
                           color: subText,
                         ),
                       ),
                     ],
-                  ),
+                  )
+
                 ],
               ),
-            ),
+            )
+
           ],
         ),
       ),
     );
   }
 }
-
-/* ---------------- UI bits ---------------- */
 
 class _HeaderIconBtn extends StatelessWidget {
   final IconData icon;
@@ -404,26 +326,20 @@ class _HeaderIconBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE7E2DC)),
-          ),
-          child: Icon(icon, size: 20, color: Colors.black87),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFFE7E2DC)),
+          borderRadius: BorderRadius.circular(10),
         ),
+        child: Icon(icon),
       ),
     );
   }
 }
-
 class _DropdownPill<T> extends StatelessWidget {
   final T value;
   final List<T> items;

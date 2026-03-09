@@ -97,7 +97,95 @@ class ProgressSoftCard extends StatelessWidget {
     );
   }
 }
+class TotalSavedThisWeekCard extends StatelessWidget {
+  final int amount; // e.g. 120
+  final int days;   // e.g. 6
+  final int totalDays; // 7
 
+  const TotalSavedThisWeekCard({
+    super.key,
+    required this.amount,
+    required this.days,
+    this.totalDays = 7,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final w = context.screenWidth;
+
+    final leftChip = _clamp(w * 0.12, 44, 50);
+    final r = _clamp(w * 0.060, 20, 24);
+
+    return Row(
+      children: [
+        // Left $ chip
+        Container(
+          width: leftChip,
+          height: leftChip,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1EFFF), // subtle purple tint like SS
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Center(
+            child: Text(
+              "\$",
+              style: AppTextStyles.heading24SemiBold.copyWith(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: AppColors.progressFill, // purple
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 14),
+
+        // Amount + subtitle
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "\$$amount",
+                style: AppTextStyles.heading24SemiBold.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary.withOpacity(0.92),
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                "$days days streak",
+                style: AppTextStyles.body14Regular.copyWith(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary.withOpacity(0.45),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Right ratio badge
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF4F1EC),
+            borderRadius: BorderRadius.circular(r),
+          ),
+          child: Text(
+            "$days/$totalDays",
+            style: AppTextStyles.body14Regular.copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary.withOpacity(0.55),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
 /* =======================
    EVOLUTION JOURNEY
 ======================= */

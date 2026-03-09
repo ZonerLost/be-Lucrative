@@ -133,22 +133,19 @@ class HistoryTimelineList extends GetView<HistoryController> {
     return Obx(() {
       final list = controller.entries;
 
-      return Scrollbar(
-        thumbVisibility: true,
-        child: ListView.separated(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.only(top: 6, bottom: 14),
-          itemCount: list.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 14),
-          itemBuilder: (context, i) {
-            final item = list[i];
-            return TimelineItem(
-              entry: item,
-              isFirst: i == 0,
-              isLast: i == list.length - 1,
-            );
-          },
-        ),
+      return ListView.separated(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.only(top: 6, bottom: 16),
+        itemCount: list.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 14),
+        itemBuilder: (context, i) {
+          final item = list[i];
+          return TimelineItem(
+            entry: item,
+            isFirst: i == 0,
+            isLast: i == list.length - 1,
+          );
+        },
       );
     });
   }
@@ -176,13 +173,16 @@ class TimelineItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IntrinsicHeight( // ✅ makes left timeline stretch with card height
+    const gutterW = 24.0;
+    const dotSize = 12.0;
+    const dotTop = 20.0; // ✅ screenshot feel
+
+    return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-
           SizedBox(
-            width: 22,
+            width: gutterW,
             child: Stack(
               children: [
                 Positioned.fill(
@@ -191,17 +191,20 @@ class TimelineItem extends StatelessWidget {
                       color: AppColors.timelineLine,
                       isFirst: isFirst,
                       isLast: isLast,
-                      dotAsset: AppAssets.purple_circle,
+                      dotTop: dotTop,
+                      dotSize: dotSize,
                     ),
                   ),
                 ),
+
+                // ✅ dot overlay
                 Positioned(
-                  top: 18, // 👈 same value as painter dotTop
-                  left: (22 - 12) / 2,
+                  top: dotTop,
+                  left: (gutterW - dotSize) / 2,
                   child: SvgPicture.asset(
                     AppAssets.purple_circle,
-                    width: 12,
-                    height: 12,
+                    width: dotSize,
+                    height: dotSize,
                   ),
                 ),
               ],
@@ -209,11 +212,11 @@ class TimelineItem extends StatelessWidget {
           ),
           const SizedBox(width: 10),
 
-          // card
           Expanded(
             child: HistoryCard(
               dateText: _formatDate(entry.date),
               xpText: entry.xpLabel,
+              amountText: entry.amountLabel ?? '\$5',
               streakText: entry.dayLabel,
               note: entry.note,
             ),
@@ -229,6 +232,7 @@ class TimelineItem extends StatelessWidget {
 class HistoryCard extends StatelessWidget {
   final String dateText;
   final String xpText;
+  final String amountText; // ✅ FIX: field added
   final String streakText;
   final String note;
 
@@ -236,6 +240,7 @@ class HistoryCard extends StatelessWidget {
     super.key,
     required this.dateText,
     required this.xpText,
+    required this.amountText, // ✅ FIX: properly in constructor
     required this.streakText,
     required this.note,
   });
@@ -245,7 +250,7 @@ class HistoryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
-        color: AppColors.cardBg, // ✅ using your AppColors
+        color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -258,7 +263,6 @@ class HistoryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// Date + flame
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -279,7 +283,7 @@ class HistoryCard extends StatelessWidget {
                 ),
                 child: Center(
                   child: SvgPicture.asset(
-                    AppAssets.fire, // ✅ your asset
+                    AppAssets.fire,
                     width: 14,
                     height: 14,
                   ),
@@ -290,7 +294,6 @@ class HistoryCard extends StatelessWidget {
 
           const SizedBox(height: 10),
 
-          /// XP + Day row
           Row(
             children: [
               Container(
@@ -308,7 +311,20 @@ class HistoryCard extends StatelessWidget {
                   ),
                 ),
               ),
+
               const SizedBox(width: 10),
+
+              Text(
+                amountText, // ✅ NOW WORKS
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary.withOpacity(0.92),
+                ),
+              ),
+
+              const SizedBox(width: 10),
+
               Text(
                 '$streakText 🔥',
                 style: TextStyle(
@@ -322,7 +338,6 @@ class HistoryCard extends StatelessWidget {
 
           const SizedBox(height: 10),
 
-          /// Note
           Text(
             note,
             style: TextStyle(
@@ -340,34 +355,32 @@ class _TimelinePainter extends CustomPainter {
   final Color color;
   final bool isFirst;
   final bool isLast;
-  final String dotAsset;
+  final double dotTop;
+  final double dotSize;
 
   _TimelinePainter({
     required this.color,
     required this.isFirst,
     required this.isLast,
-    required this.dotAsset,
+    required this.dotTop,
+    required this.dotSize,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    const double lineW = 3;
-    const double dotSize = 12;
-
-    final double centerX = size.width / 2;
-    final double dotTop = 18; // 👈 screenshot match: 16-22 me tweak kar lena
-    final double dotCenterY = dotTop + dotSize / 2;
-
     final paint = Paint()
       ..color = color
-      ..strokeWidth = lineW
+      ..strokeWidth = 2.5
       ..strokeCap = StrokeCap.round;
+
+    final centerX = size.width / 2;
+    final dotCenterY = dotTop + dotSize / 2;
 
     // top segment
     if (!isFirst) {
       canvas.drawLine(
         Offset(centerX, 0),
-        Offset(centerX, dotCenterY),
+        Offset(centerX, dotCenterY - 2), // little gap under dot
         paint,
       );
     }
@@ -375,20 +388,19 @@ class _TimelinePainter extends CustomPainter {
     // bottom segment
     if (!isLast) {
       canvas.drawLine(
-        Offset(centerX, dotCenterY),
+        Offset(centerX, dotCenterY + 2), // little gap above dot
         Offset(centerX, size.height),
         paint,
       );
     }
-
-    // Dot SVG: CustomPainter directly SVG draw nahi karta
-    // Isliye dot ko widget layer pe overlay karenge (next step).
   }
 
   @override
   bool shouldRepaint(covariant _TimelinePainter oldDelegate) {
     return oldDelegate.color != color ||
         oldDelegate.isFirst != isFirst ||
-        oldDelegate.isLast != isLast;
+        oldDelegate.isLast != isLast ||
+        oldDelegate.dotTop != dotTop ||
+        oldDelegate.dotSize != dotSize;
   }
 }
